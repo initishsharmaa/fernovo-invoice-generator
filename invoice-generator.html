@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Fernovo Stays - Invoice Generator</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .hotel-name {
+        font-size: 2.2em;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .hotel-details {
+        font-size: 1.1em;
+        opacity: 0.9;
+        line-height: 1.6;
+      }
+
+      .form-section {
+        padding: 40px;
+      }
+
+      .form-title {
+        font-size: 1.8em;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #34495e;
+        font-size: 1.1em;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      input[type="tel"],
+      select {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e6ed;
+        border-radius: 10px;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+      }
+
+      .generate-btn {
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.3em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 20px;
+      }
+
+      .generate-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .clear-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .clear-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+      }
+
+      .clear-btn:active {
+        transform: translateY(0);
+      }
+
+      .receipt {
+        display: none;
+        background: white;
+        padding: 30px;
+        margin-top: 20px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        max-height: 90vh;
+        overflow: hidden;
+      }
+
+      .receipt-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #2c3e50;
+      }
+
+      .receipt-title {
+        font-size: 1.8em;
+        color: #2c3e50;
+        margin-bottom: 5px;
+      }
+
+      .receipt-subtitle {
+        color: #7f8c8d;
+        font-size: 1em;
+      }
+
+      .receipt-details {
+        margin: 20px 0;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #ecf0f1;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #34495e;
+      }
+
+      .detail-value {
+        color: #2c3e50;
+        font-weight: 500;
+      }
+
+      .amount-section {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin: 15px 0;
+        border-left: 5px solid #667eea;
+      }
+
+      .amount-label {
+        font-size: 1.1em;
+        color: #34495e;
+        margin-bottom: 5px;
+      }
+
+      .amount-value {
+        font-size: 1.6em;
+        font-weight: bold;
+        color: #27ae60;
+      }
+
+      .footer-note {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px solid #ecf0f1;
+        color: #7f8c8d;
+        font-style: italic;
+        font-size: 0.9em;
+      }
+
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+          margin: 0;
+        }
+        .container {
+          box-shadow: none;
+          border-radius: 0;
+          margin: 0;
+          max-width: 100%;
+        }
+        .header {
+          display: none;
+        }
+        .form-section {
+          display: none;
+        }
+        .receipt {
+          display: block !important;
+          margin: 0;
+          padding: 20px;
+          border: none;
+          page-break-inside: avoid;
+        }
+        .receipt-header {
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+        }
+        .receipt-title {
+          font-size: 1.8em;
+        }
+        .receipt-subtitle {
+          font-size: 1em;
+        }
+        .receipt-details {
+          margin: 20px 0;
+        }
+        .detail-row {
+          margin-bottom: 10px;
+          padding: 5px 0;
+        }
+        .amount-section {
+          margin: 15px 0;
+          padding: 15px;
+        }
+        .amount-value {
+          font-size: 1.6em;
+        }
+        .footer-note {
+          margin-top: 20px;
+          padding-top: 15px;
+          font-size: 0.9em;
+        }
+        .clear-btn {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="hotel-name">The Fernovo Stays</div>
+        <div class="hotel-details">
+          Baror, Himachal Pradesh<br />
+          Advance Payment Receipt
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2 class="form-title">Generate Advance Receipt</h2>
+
+        <form id="invoiceForm">
+          <div class="form-group">
+            <label for="customerName">Customer Name *</label>
+            <input type="text" id="customerName" required />
+          </div>
+
+          <div class="form-group">
+            <label for="customerPhone">Customer Phone</label>
+            <input type="tel" id="customerPhone" />
+          </div>
+
+          <div class="form-group">
+            <label for="paymentType">Payment Type *</label>
+            <select id="paymentType" required>
+              <option value="">Select Payment Type</option>
+              <option value="Advance">Advance</option>
+              <option value="Total Amount">Total Amount</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="checkInDate">Check-in Date</label>
+            <input type="date" id="checkInDate" />
+          </div>
+
+          <div class="form-group">
+            <label for="checkOutDate">Check-out Date</label>
+            <input type="date" id="checkOutDate" />
+          </div>
+
+          <div class="form-group">
+            <label for="advanceAmount">Amount (₹) *</label>
+            <input type="number" id="advanceAmount" min="1" required />
+          </div>
+
+          <button type="submit" class="generate-btn">Generate Receipt</button>
+        </form>
+      </div>
+
+      <div class="receipt" id="receipt">
+        <div class="receipt-header">
+          <div class="receipt-title">The Fernovo Stays</div>
+          <div class="receipt-subtitle">Baror, Himachal Pradesh</div>
+          <div class="receipt-subtitle">Advance Payment Receipt</div>
+        </div>
+
+        <div class="receipt-details">
+          <div class="detail-row">
+            <span class="detail-label">Receipt No:</span>
+            <span class="detail-value" id="receiptNo"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date:</span>
+            <span class="detail-value" id="receiptDate"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Payment Type:</span>
+            <span class="detail-value" id="displayPaymentType"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Customer Name:</span>
+            <span class="detail-value" id="displayCustomerName"></span>
+          </div>
+          <div class="detail-row" id="phoneRow" style="display: none">
+            <span class="detail-label">Phone:</span>
+            <span class="detail-value" id="displayPhone"></span>
+          </div>
+          <div class="detail-row" id="checkInRow" style="display: none">
+            <span class="detail-label">Check-in Date:</span>
+            <span class="detail-value" id="displayCheckIn"></span>
+          </div>
+          <div class="detail-row" id="checkOutRow" style="display: none">
+            <span class="detail-label">Check-out Date:</span>
+            <span class="detail-value" id="displayCheckOut"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Room Type:</span>
+            <span class="detail-value">Standard</span>
+          </div>
+        </div>
+
+        <div class="amount-section">
+          <div class="amount-label">
+            <span id="amountTypeLabel">Amount</span> Received:
+          </div>
+          <div class="amount-value">₹ <span id="displayAmount"></span></div>
+        </div>
+
+        <div class="footer-note">
+          Thank you for choosing The Fernovo Stays!<br />
+          This is a computer-generated receipt for payment.
+        </div>
+
+        <button id="clearReceipt" class="clear-btn">
+          Clear Receipt & Create New
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("invoiceForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // Get form values
+          const paymentType = document.getElementById("paymentType").value;
+          const customerName = document.getElementById("customerName").value;
+          const customerPhone = document.getElementById("customerPhone").value;
+          const checkInDate = document.getElementById("checkInDate").value;
+          const checkOutDate = document.getElementById("checkOutDate").value;
+          const advanceAmount = document.getElementById("advanceAmount").value;
+
+          // Generate receipt number
+          const receiptNo = "FNV" + Date.now().toString().slice(-8);
+
+          // Get current date
+          const today = new Date();
+          const formattedDate = today.toLocaleDateString("en-IN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+
+          // Populate receipt
+          document.getElementById("receiptNo").textContent = receiptNo;
+          document.getElementById("receiptDate").textContent = formattedDate;
+          document.getElementById("displayPaymentType").textContent =
+            paymentType;
+          document.getElementById("displayCustomerName").textContent =
+            customerName;
+          document.getElementById("displayAmount").textContent =
+            new Intl.NumberFormat("en-IN").format(advanceAmount);
+          document.getElementById("amountTypeLabel").textContent = paymentType;
+
+          // Show optional fields only if filled
+          if (customerPhone) {
+            document.getElementById("displayPhone").textContent = customerPhone;
+            document.getElementById("phoneRow").style.display = "flex";
+          }
+
+          if (checkInDate) {
+            document.getElementById("displayCheckIn").textContent = new Date(
+              checkInDate
+            ).toLocaleDateString("en-IN");
+            document.getElementById("checkInRow").style.display = "flex";
+          }
+
+          if (checkOutDate) {
+            document.getElementById("displayCheckOut").textContent = new Date(
+              checkOutDate
+            ).toLocaleDateString("en-IN");
+            document.getElementById("checkOutRow").style.display = "flex";
+          }
+
+          // Show receipt and trigger print
+          document.getElementById("receipt").style.display = "block";
+
+          // Scroll to receipt
+          document
+            .getElementById("receipt")
+            .scrollIntoView({ behavior: "smooth" });
+
+          // Auto-trigger print dialog after a short delay
+          setTimeout(() => {
+            window.print();
+          }, 1000);
+        });
+
+      // Clear receipt functionality
+      document
+        .getElementById("clearReceipt")
+        .addEventListener("click", function () {
+          // Hide the receipt
+          document.getElementById("receipt").style.display = "none";
+
+          // Reset the form
+          document.getElementById("invoiceForm").reset();
+
+          // Hide optional rows
+          document.getElementById("phoneRow").style.display = "none";
+          document.getElementById("checkInRow").style.display = "none";
+          document.getElementById("checkOutRow").style.display = "none";
+
+          // Scroll back to form
+          document
+            .querySelector(".form-section")
+            .scrollIntoView({ behavior: "smooth" });
+        });
+    </script>
+  </body>
+</html>
