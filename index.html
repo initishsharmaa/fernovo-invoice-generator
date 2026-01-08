@@ -48,6 +48,29 @@
                 top: 0;
             }
         }
+        
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="text-gray-800 pb-10">
@@ -71,6 +94,30 @@
         <!-- LEFT COLUMN: Controls -->
         <div class="lg:col-span-4 space-y-6">
             
+            <!-- Email Generator -->
+            <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-xl shadow-sm border border-indigo-100">
+                <h2 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2 font-sans">
+                    <i class="ph ph-envelope-open"></i> Email Communication
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Subject Line</label>
+                        <button onclick="copySubject()" class="w-full bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg flex items-center justify-between group transition-all">
+                            <span>Copy Subject</span>
+                            <i class="ph ph-copy text-lg group-hover:scale-110 transition-transform"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email Body</label>
+                        <button onclick="copyBody()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-between group transition-all shadow-md">
+                            <span>Copy Email Text</span>
+                            <i class="ph ph-copy text-lg group-hover:scale-110 transition-transform"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 text-center mt-2">Copies formatted text based on details below.</p>
+                </div>
+            </div>
+
             <!-- Booking Details -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-lg font-bold text-gray-500 mb-4 flex items-center gap-2 font-sans">
@@ -110,7 +157,10 @@
                 </h2>
                 <div class="space-y-3">
                     <input type="text" id="customerName" placeholder="Guest Name" oninput="updateInvoice()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <input type="text" id="phone" placeholder="Phone Number" oninput="updateInvoice()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="phone" placeholder="Phone Number" oninput="updateInvoice()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="number" id="totalGuests" placeholder="Total Guests" value="2" oninput="updateInvoice()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
                     <input type="email" id="email" placeholder="Email Address" oninput="updateInvoice()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
             </div>
@@ -277,6 +327,12 @@
         </div>
     </div>
 
+    <!-- Toast -->
+    <div id="toast">Copied to clipboard!</div>
+
+    <!-- Hidden Input for Copying -->
+    <textarea id="copyArea" class="hidden"></textarea>
+
     <!-- Logic Script -->
     <script>
         // Init Date
@@ -311,6 +367,7 @@
             const total = parseFloat(document.getElementById('totalAmount').value) || 0;
             const advance = parseFloat(document.getElementById('advanceAmount').value) || 0;
             const paymentMode = document.getElementById('paymentMode').value;
+            // Note: Total Guests is used for email, not displayed on invoice currently.
 
             // Calculate Nights
             let nights = 0;
@@ -359,8 +416,71 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Temporary visual tweak for PDF generation if needed
             html2pdf().set(opt).from(element).save();
+        }
+
+        // --- Email Logic ---
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function copyToClipboard(text) {
+            const copyArea = document.getElementById('copyArea');
+            copyArea.value = text;
+            copyArea.classList.remove('hidden'); // Show briefly to select
+            copyArea.select();
+            copyArea.setSelectionRange(0, 99999); // Mobile
+            try {
+                document.execCommand('copy');
+                showToast("Copied to clipboard!");
+            } catch (err) {
+                showToast("Failed to copy");
+            }
+            copyArea.classList.add('hidden'); // Hide again
+        }
+
+        function copySubject() {
+            const customerName = document.getElementById('customerName').value || "Guest";
+            const propertyName = document.getElementById('propertyName').value;
+            const subject = `Booking Confirmation - ${propertyName} - ${customerName}`;
+            copyToClipboard(subject);
+        }
+
+        function copyBody() {
+            const customerName = document.getElementById('customerName').value || "Guest";
+            const propertyName = document.getElementById('propertyName').value;
+            const totalGuests = document.getElementById('totalGuests').value || "2";
+            const checkIn = document.getElementById('checkIn').value || "TBD";
+            const checkOut = document.getElementById('checkOut').value || "TBD";
+
+            const emailBody = `Hi ${customerName},
+
+We are delighted to confirm your stay booking with us at ${propertyName}! 🌲 Your reservation details are confirmed below.
+
+Reservation Summary
+• Guest Name: ${customerName}
+• Total Guests: ${totalGuests}
+• Property: ${propertyName}
+• Meal Plan: As per package (if applicable)
+
+Stay Details
+• Check-in: ${checkIn} (12:00 PM)
+• Check-out: ${checkOut} (11:00 AM)
+
+We look forward to hosting you for a comfortable and memorable stay surrounded by the stunning beauty of Himachal.
+
+Important Terms & Conditions
+• Payment Confirmation: The booking is considered confirmed only upon receipt of the advance/full payment.
+• Check-in/Check-out Times: Standard check-in time is 12:00 PM and check-out time is 11:00 AM.
+• Peak Season Policy: As this booking falls during the peak season, cancellations or refunds cannot be processed once the booking is confirmed.
+• Unforeseen Circumstances: In the event of unforeseen weather or road conditions, we will do our best to assist with rescheduling based on availability.
+
+Thank you for choosing Fernovo Stays — your offbeat escape in the Himalayas 🌿`;
+
+            copyToClipboard(emailBody);
         }
 
         // Run once on load
